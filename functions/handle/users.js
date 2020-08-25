@@ -1,13 +1,12 @@
 const {db,admin} = require('../ulti/admin')
 const firebaseConfig = require('../ulti/config')
-
+const {uuid} =require("uuidv4")
 const firebase = require('firebase')
 firebase.initializeApp(firebaseConfig)
 
 const { SignUpValid, LoginValid, reduceUserProfile} = require('../ulti/valid')
 
-exports.signup = (req,res)=>{
-    
+exports.signup = (req,res)=>{    
     const newUser ={
         email: req.body.email,
         password: req.body.password,
@@ -107,6 +106,7 @@ exports.uploadImg = (req,res) =>{
 
     let imageName
     let imgToBeUp ={}
+    let generatedToken=uuid()
 
     busboy.on('file', (fieldname, file, filename, encoding, mimetype)=>{
         
@@ -119,7 +119,7 @@ exports.uploadImg = (req,res) =>{
         // random name img ex 5464564.png
         imageName = `${Math.round(Math.random()*1000000000)}.${imageExt}`
         const filepath= path.join(os.tmpdir(), imageName)
-        imgToBeUp = {filepath,mimetype}
+        imgToBeUp = {filepath,mimetype};
         file.pipe(fs.createWriteStream(filepath))
     })
 
@@ -131,22 +131,22 @@ exports.uploadImg = (req,res) =>{
                 metadata:{
                     contentType: imgToBeUp.mimetype,
                     // //Generate token to be appended to imageUrl
-                    // firebaseStorageDownloadTokens: generatedToken,
+                    firebaseStorageDownloadTokens: generatedToken,
                 }
             }
         })
-    // img url bs d buka oleh user
-    .then(()=>{
-        const imgURL =`https://firebasestorage.googleapis.com/b/${firebaseConfig.storageBucket}/o/${imageName}?alt=media`
-        return db.doc(`/users/${req.user.handle}`).update({imgURL})
-    })
-    .then(()=>{
-        return res.json({message: 'img  uploaded'})
-    })
-    .catch((err)=>{
-         console.error(err)
-         return res.status(500).json({error: err.code})
-    })
+        // img url bs d buka oleh user
+        .then(()=>{
+            const imgURL =`https://firebasestorage.googleapis.com/v0/b/${firebaseConfig.storageBucket}/o/${imageName}?alt=media&token=${generatedToken}`
+            return db.doc(`/users/${req.user.handle}`).update({imgURL})
+        })
+        .then(()=>{
+            return res.json({message: 'img  uploaded'})
+        })
+        .catch((err)=>{
+            console.error(err)
+            return res.status(500).json({error: err.code})
+        })
     })
     // propert every request object
     busboy.end(req.rawBody)
@@ -230,7 +230,7 @@ exports.readNotifications =(req,res)=>{
     let batch = db.batch()
     req.body.forEach(notificationId =>{
         const notification = db.doc(`/notifications/${notificationId}`)
-        batch.update(notification, {read:true})
+        batch.update(notification, {read : true})
     })
     batch.commit()
     .then(()=>{

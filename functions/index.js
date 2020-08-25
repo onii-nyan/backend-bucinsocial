@@ -64,7 +64,8 @@ exports.notificationLikes = functions.region('asia-southeast2').firestore.docume
                     sender: snapshot.data().userName,
                     type: 'like',
                     read: false,
-                    loveId: doc.id 
+                    loveId: doc.id ,
+                    notificationId: snapshot.id       
                 })
             }
         })
@@ -92,7 +93,8 @@ exports.notificationComment = functions.region('asia-southeast2').firestore.docu
                     sender: snapshot.data().userName,
                     type: 'comment',
                     read: false,
-                    loveId: doc.id 
+                    loveId: doc.id,
+                    notificationId: snapshot.id 
                 }) 
             } 
         })
@@ -106,7 +108,9 @@ exports.notificationComment = functions.region('asia-southeast2').firestore.docu
 
 exports.imgChange= functions.region('asia-southeast2').firestore.document('/users/{userId}')
     .onUpdate((change)=>{
-        if(change.before.data().imgURL !== change.after.data.imgURL){
+        console.log(change.before.data())
+        console.log(change.after.data())
+        if(change.before.data().imgURL !== change.after.data().imgURL){
             console.log('img change')
             const batch = db.batch()
             return db.collection('loves').where('userName', '==', change.before.data().handle).get()
@@ -124,7 +128,7 @@ exports.onLoveDel= functions.region('asia-southeast2').firestore.document('/love
 .onDelete((snapshot, context)=>{
     const loveId = context.params.loveId
     const batch = db.batch()
-    return db.collection('comment').where('loveId', '==', loveId).get()
+    return db.collection('comments').where('loveId', '==', loveId).get()
     .then((data)=>{
         data.forEach((doc)=>{
             batch.delete(db.doc(`/comments/${doc.id}`))

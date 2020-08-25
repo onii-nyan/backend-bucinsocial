@@ -3,20 +3,24 @@ const{db} =require('../ulti/admin')
 exports.getLove = (req,res) => {
     db.collection('loves').orderBy('createAt', 'desc').get()
     .then(data => {
-        let loves= []
+        let loves= [];
         data.forEach(doc =>{
             loves.push({
                 loveId:doc.id,
                 userName: doc.data().userName,
                 coupleName: doc.data().coupleName,
                 body: doc.data().body,
-                createAt: doc.data().createAt
+                createAt: doc.data().createAt,
+                commentCount:doc.data().commentCount,
+                likeCount:doc.data().likeCount,
+                userImg:doc.data().userImg
             })
         })
         return res.json(loves)
     })
     .catch(err => {
         console.error(err)
+        res.status(500).json({error:err.code})
     })
 }
 
@@ -51,12 +55,13 @@ exports.getOneLove = (req,res) =>{
         if(!doc.exists){
             return res.status(400).json({error: 'love not found'})
         }
-        loveData = doc.data()
-        loveData.loveId=doc.id
+        loveData = doc.data();
+        loveData.loveId=doc.id;
         return db.collection('comments').orderBy('createAt', 'desc').where('loveId', '==', req.params.loveId).get()
     })
     .then((data)=>{
-        loveData.comments=[]
+        loveData.comments=[];
+        console.log(data)
         data.forEach((doc)=>{
             loveData.comments.push(doc.data())
         })

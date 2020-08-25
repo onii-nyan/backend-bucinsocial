@@ -8,7 +8,7 @@ const isEmail=(email)=>{
 }
 
 const isEmpty = (string)=>{
-    if(string.trim()==='') return true
+    if(string.trim() === '') return true
     else return false
 }
 
@@ -52,6 +52,7 @@ exports.LoginValid = (data) =>{
 exports.reduceUserProfile =(data)=>{
     let userProfile={}
     if (!isEmpty(data.bio.trim())) userProfile.bio = data.bio
+    if (!isEmpty(data.bias.trim())) userProfile.bias = data.bias
     if (!isEmpty(data.website.trim())){
         if(data.website.trim().substring(0,4) !== 'http'){
             userProfile.website = `http://${data.website.trim()}`
